@@ -14,6 +14,22 @@ type Track = {
   durationMs: number;
 };
 
+const extractPlaylistId = (input: string) => {
+  const trimmed = input.trim();
+  if (!trimmed) return '';
+  
+  try {
+    const url = new URL(trimmed);
+    return url.searchParams.get('list') || trimmed;
+  } catch (e) {
+    const listMatch = trimmed.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+    if (listMatch) {
+      return listMatch[1];
+    }
+    return trimmed;
+  }
+};
+
 export default function Home() {
   const [time, setTime] = useState('');
   
@@ -148,20 +164,34 @@ export default function Home() {
     fetchLyrics();
   }, [showLyrics, currentTrackIndex, playlist]);
 
-  // Fetch playlist on mount
+  // Settings state
+  const [showSettings, setShowSettings] = useState(false);
+  const [tempPlaylistId, setTempPlaylistId] = useState('');
+  const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!activePlaylistId && process.env.NEXT_PUBLIC_YOUTUBE_PLAYLIST_ID) {
+      setActivePlaylistId(process.env.NEXT_PUBLIC_YOUTUBE_PLAYLIST_ID);
+      setTempPlaylistId(process.env.NEXT_PUBLIC_YOUTUBE_PLAYLIST_ID);
+    }
+  }, []);
+
+  // Fetch playlist on activePlaylistId change
   useEffect(() => {
     const fetchPlaylist = async () => {
+      if (!activePlaylistId) {
+        if (!process.env.NEXT_PUBLIC_YOUTUBE_PLAYLIST_ID) {
+          setError('Please set NEXT_PUBLIC_YOUTUBE_PLAYLIST_ID in .env.local or add one in settings');
+          setIsLoading(false);
+        }
+        return;
+      }
       try {
         setIsLoading(true);
-        // Use environment variable if available, else a fallback ID
-        const playlistId = process.env.NEXT_PUBLIC_YOUTUBE_PLAYLIST_ID;
-        if (!playlistId) {
-          setError('Please set NEXT_PUBLIC_YOUTUBE_PLAYLIST_ID in .env.local');
-          setIsLoading(false);
-          return;
-        }
-
-        const res = await fetch(`/api/youtube/playlist?id=${playlistId}`);
+        setError(null);
+        playerRef.current = null; // Clear the player ref so we wait for the new player to be ready
+        
+        const res = await fetch(`/api/youtube/playlist?id=${activePlaylistId}`);
         const data = await res.json();
         
         if (data.error) throw new Error(data.error);
@@ -171,6 +201,8 @@ export default function Home() {
             artist: track.artist.replace(/ - Topic/i, '').replace(/VEVO/i, '').trim()
           }));
           setPlaylist(cleanedTracks);
+          setCurrentTrackIndex(0);
+          setProgress(0);
         } else {
           setError('Playlist is empty or invalid.');
         }
@@ -182,7 +214,7 @@ export default function Home() {
     };
 
     fetchPlaylist();
-  }, []);
+  }, [activePlaylistId]);
 
   // When track changes, update the youtube video ID directly
   useEffect(() => {
@@ -191,10 +223,14 @@ export default function Home() {
     setProgress(0);
     
     if (playerRef.current) {
-      if (isPlaying) {
-        playerRef.current.loadVideoById(track.id);
-      } else {
-        playerRef.current.cueVideoById(track.id);
+      try {
+        if (isPlaying) {
+          playerRef.current.loadVideoById(track.id);
+        } else {
+          playerRef.current.cueVideoById(track.id);
+        }
+      } catch (e) {
+        console.warn('Player not ready', e);
       }
     }
   }, [currentTrackIndex, playlist]);
@@ -234,8 +270,12 @@ export default function Home() {
     if (isPlaying) {
       progressIntervalRef.current = setInterval(() => {
         if (playerRef.current) {
-          const time = playerRef.current.getCurrentTime();
-          setProgress(time);
+          try {
+            const time = playerRef.current.getCurrentTime();
+            setProgress(time);
+          } catch (e) {
+            // Ignore if player not ready
+          }
         }
       }, 1000);
     } else {
@@ -252,15 +292,23 @@ export default function Home() {
     // Load the current track since we don't rely on the videoId prop to change tracks
     if (playlist.length > 0) {
       const track = playlist[currentTrackIndex];
-      if (isPlaying) {
-        event.target.loadVideoById(track.id);
-      } else {
-        event.target.cueVideoById(track.id);
+      try {
+        if (isPlaying) {
+          event.target.loadVideoById(track.id);
+        } else {
+          event.target.cueVideoById(track.id);
+        }
+      } catch (e) {
+        console.warn('Player not ready', e);
       }
     }
     
-    const dur = event.target.getDuration();
-    if (dur > 0) setDuration(dur);
+    try {
+      const dur = event.target.getDuration();
+      if (dur > 0) setDuration(dur);
+    } catch (e) {
+      // Ignore
+    }
   };
 
   const onPlayerStateChange = (event: YouTubeEvent) => {
@@ -373,7 +421,10 @@ export default function Home() {
             title="Search Playlist" 
             onClick={() => {
               setShowSearch(!showSearch);
-              if (!showSearch) setShowLyrics(false);
+              if (!showSearch) {
+                setShowLyrics(false);
+                setShowSettings(false);
+              }
             }} 
             disabled={playlist.length === 0}
           >
@@ -405,14 +456,25 @@ export default function Home() {
                   View this Song
                 </button>
                 <button
-                  className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors whitespace-nowrap"
+                  className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors border-b border-white/5 whitespace-nowrap"
                   onClick={() => {
                     setShowYtMenu(false);
-                    const playlistId = process.env.NEXT_PUBLIC_YOUTUBE_PLAYLIST_ID;
+                    const playlistId = activePlaylistId || process.env.NEXT_PUBLIC_YOUTUBE_PLAYLIST_ID;
                     if (playlistId) window.open(`https://youtube.com/playlist?list=${playlistId}`, '_blank');
                   }}
                 >
                   Open playlist
+                </button>
+                <button
+                  className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors whitespace-nowrap"
+                  onClick={() => {
+                    setShowYtMenu(false);
+                    setShowSettings(true);
+                    if (showLyrics) setShowLyrics(false);
+                    if (showSearch) setShowSearch(false);
+                  }}
+                >
+                  Change Playlist
                 </button>
               </div>
             )}
@@ -422,8 +484,9 @@ export default function Home() {
 
       {/* Hidden YouTube Player */}
       <div style={{ display: 'none' }}>
-        {playlist.length > 0 && (
+        {playlist.length > 0 && activePlaylistId && (
           <YouTube 
+            key={activePlaylistId}
             videoId={playlist[0].id} 
             onReady={onPlayerReady} 
             onStateChange={onPlayerStateChange} 
@@ -489,6 +552,55 @@ export default function Home() {
              className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors cursor-pointer bg-transparent border-none p-2"
              onClick={() => setShowLyrics(false)}
              title="Close Lyrics"
+           >
+             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+             </svg>
+           </button>
+        </div>
+      )}
+
+      {/* Settings Overlay */}
+      {showSettings && (
+        <div className="absolute top-5 bottom-[150px] left-1/2 -translate-x-1/2 w-[90%] max-w-[500px] h-fit z-20 flex flex-col items-center justify-start overflow-hidden bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-sm:bottom-28 shadow-2xl">
+           <h3 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-md">
+             Settings
+           </h3>
+           <div className="w-full flex flex-col gap-4">
+             <div>
+               <label className="text-sm text-white/70 mb-2 block">YouTube Playlist ID</label>
+               <input
+                 type="text"
+                 placeholder="e.g. PL7EN7w5QYtXWgOoEa-5mWuT5I0YQcyyNb"
+                 value={tempPlaylistId}
+                 onChange={(e) => setTempPlaylistId(e.target.value)}
+                 className="w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 text-white placeholder-white/50 focus:outline-none focus:border-[#00ff88] transition-colors"
+               />
+               <p className="text-xs text-white/50 mt-2">
+                 You can find the playlist ID in the URL of a YouTube playlist (the part after <code>list=</code>).
+               </p>
+             </div>
+             <button
+               className="w-full bg-[#00ff88] text-black font-semibold rounded-xl py-3 mt-4 hover:bg-[#00cc6a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+               disabled={!tempPlaylistId.trim() || extractPlaylistId(tempPlaylistId) === activePlaylistId}
+               onClick={() => {
+                 const extractedId = extractPlaylistId(tempPlaylistId);
+                 if (extractedId) {
+                   setActivePlaylistId(extractedId);
+                   setTempPlaylistId(extractedId);
+                   setShowSettings(false);
+                   setIsPlaying(true); // Attempt to autoplay after loading new playlist
+                 }
+               }}
+             >
+               Load Playlist
+             </button>
+           </div>
+           
+           <button 
+             className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors cursor-pointer bg-transparent border-none p-2"
+             onClick={() => setShowSettings(false)}
+             title="Close Settings"
            >
              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
@@ -677,7 +789,10 @@ export default function Home() {
               title="Lyrics" 
               onClick={() => {
                 setShowLyrics(!showLyrics);
-                if (!showLyrics) setShowSearch(false);
+                if (!showLyrics) {
+                  setShowSearch(false);
+                  setShowSettings(false);
+                }
               }} 
               disabled={playlist.length === 0}
             >
