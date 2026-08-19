@@ -56,6 +56,10 @@ export default function Home() {
   const [isLyricsLoading, setIsLyricsLoading] = useState(false);
   const [lyricsError, setLyricsError] = useState<string | null>(null);
 
+  // Search state
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
 
   const parseSyncedLyrics = (lrc: string) => {
@@ -358,7 +362,21 @@ export default function Home() {
             LOCAL TRAIN
           </h1>
         </div>
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-4 items-center">
+
+          <button 
+            className={`flex items-center justify-center bg-white/5 border border-white/10 w-[38px] h-[38px] rounded-full text-white backdrop-blur-md cursor-pointer transition-colors hover:bg-white/10 ${showSearch ? 'bg-white/20 text-[#00ff88]' : ''}`}
+            title="Search Playlist" 
+            onClick={() => {
+              setShowSearch(!showSearch);
+              if (!showSearch) setShowLyrics(false);
+            }} 
+            disabled={playlist.length === 0}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+          </button>
 
           <div className="relative" ref={ytMenuRef}>
             <button 
@@ -412,7 +430,7 @@ export default function Home() {
 
       {/* Lyrics Overlay */}
       {showLyrics && (
-        <div className="absolute top-16 bottom-[130px] left-1/2 -translate-x-1/2 w-[90%] max-w-[1000px] z-20 flex flex-col items-center justify-start overflow-hidden bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-sm:bottom-28 shadow-2xl">
+        <div className="absolute top-5 bottom-[150px] left-1/2 -translate-x-1/2 w-[90%] max-w-[700px] z-20 flex flex-col items-center justify-start overflow-hidden bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-sm:bottom-28 shadow-2xl">
            <h3 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-md">
              {currentTrack ? currentTrack.title : 'Lyrics'}
            </h3>
@@ -475,6 +493,81 @@ export default function Home() {
         </div>
       )}
 
+      {/* Search Overlay */}
+      {showSearch && (
+        <div className="absolute top-5 bottom-[150px] left-1/2 -translate-x-1/2 w-[90%] max-w-[700px] z-20 flex flex-col items-center justify-start overflow-hidden bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-sm:bottom-28 shadow-2xl">
+           <h3 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-md">
+             Search Playlist
+           </h3>
+           <span className="absolute top-6 left-8 text-sm font-medium text-white/60 bg-white/10 px-3 py-1 rounded-full border border-white/10">
+             {playlist.length} songs
+           </span>
+           <div className="w-full max-w-2xl mb-6 relative">
+             <input
+               type="text"
+               placeholder="Search by song or artist..."
+               value={searchQuery}
+               onChange={(e) => setSearchQuery(e.target.value)}
+               className="w-full bg-white/10 border border-white/20 rounded-full py-3 px-6 text-white placeholder-white/50 focus:outline-none focus:border-[#00ff88] transition-colors"
+               autoFocus
+             />
+             {searchQuery && (
+               <button
+                 className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                 onClick={() => setSearchQuery('')}
+               >
+                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                   <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                 </svg>
+               </button>
+             )}
+           </div>
+           
+           <div className="w-full max-w-2xl overflow-y-auto flex-1 pr-2 space-y-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
+             {playlist.map((track, index) => {
+               if (searchQuery && !track.title.toLowerCase().includes(searchQuery.toLowerCase()) && !track.artist.toLowerCase().includes(searchQuery.toLowerCase())) {
+                 return null;
+               }
+               const isCurrent = index === currentTrackIndex;
+               return (
+                 <div
+                   key={track.id}
+                   className={`flex items-center gap-4 p-3 rounded-xl cursor-pointer transition-colors ${isCurrent ? 'bg-white/20' : 'hover:bg-white/10'}`}
+                   onClick={() => {
+                     setCurrentTrackIndex(index);
+                     setShowSearch(false);
+                     setIsPlaying(true);
+                   }}
+                 >
+                   <img src={track.albumArt} alt={track.title} className="w-12 h-12 rounded-md object-cover" />
+                   <div className="flex-col flex-1 min-w-0">
+                     <div className={`truncate font-semibold ${isCurrent ? 'text-[#00ff88]' : 'text-white'}`}>{track.title}</div>
+                     <div className="truncate text-sm text-white/60">{track.artist}</div>
+                   </div>
+                   {isCurrent && (
+                     <div className="text-[#00ff88]">
+                       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                         <path d="M8 5v14l11-7z"/>
+                       </svg>
+                     </div>
+                   )}
+                 </div>
+               );
+             })}
+           </div>
+
+           <button 
+             className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors cursor-pointer bg-transparent border-none p-2"
+             onClick={() => setShowSearch(false)}
+             title="Close Search"
+           >
+             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+             </svg>
+           </button>
+        </div>
+      )}
+
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-[700px] bg-gradient-to-br from-[#8c322840] to-[#50141440] backdrop-blur-xl border border-white/10 rounded-[40px] px-6 py-4 flex items-center gap-6 shadow-[0_16px_40px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] z-30 max-sm:flex-col max-sm:p-6 max-sm:gap-4 max-sm:rounded-3xl max-sm:bottom-4">
         
         <div className={`relative w-[70px] h-[70px] rounded-full overflow-hidden shadow-[0_4px_15px_rgba(0,0,0,0.4)] shrink-0 max-sm:w-[100px] max-sm:h-[100px] ${(isPlaying && !isLoading) ? 'animate-spin-slow' : ''}`}>
@@ -512,76 +605,83 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 shrink-0 max-sm:mt-2">
-          <button 
-            className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 ${isShuffle ? 'text-[#00ff88] opacity-100 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]' : 'text-white opacity-80 hover:opacity-100'}`}
-            title="Shuffle" onClick={() => setIsShuffle(!isShuffle)} disabled={playlist.length === 0}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
-            </svg>
-          </button>
-
-          <button 
-            className="bg-transparent border-none text-white cursor-pointer flex items-center justify-center p-0 opacity-80 transition-all hover:opacity-100 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100" 
-            title="Previous" onClick={handlePrev} disabled={playlist.length === 0}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
-            </svg>
-          </button>
-          
-          <button 
-            className="w-11 h-11 rounded-full bg-white text-black shadow-[0_4px_10px_rgba(0,0,0,0.3)] flex items-center justify-center p-0 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100" 
-            onClick={togglePlay} title={isPlaying ? "Pause" : "Play"} disabled={playlist.length === 0 || isLoading}
-          >
-            {isPlaying ? (
+        <div className="flex flex-col items-center gap-3 shrink-0 max-sm:mt-2">
+          <div className="flex items-center gap-4">
+            <button 
+              className="bg-transparent border-none text-white cursor-pointer flex items-center justify-center p-0 opacity-80 transition-all hover:opacity-100 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100" 
+              title="Previous" onClick={handlePrev} disabled={playlist.length === 0}
+            >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
               </svg>
-            ) : (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: '4px' }}>
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-            )}
-          </button>
+            </button>
+            
+            <button 
+              className="w-11 h-11 rounded-full bg-white text-black shadow-[0_4px_10px_rgba(0,0,0,0.3)] flex items-center justify-center p-0 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100" 
+              onClick={togglePlay} title={isPlaying ? "Pause" : "Play"} disabled={playlist.length === 0 || isLoading}
+            >
+              {isPlaying ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </svg>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: '4px' }}>
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              )}
+            </button>
 
-          <button 
-            className="bg-transparent border-none text-white cursor-pointer flex items-center justify-center p-0 opacity-80 transition-all hover:opacity-100 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100" 
-            title="Next" onClick={() => handleNext()} disabled={playlist.length === 0}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
-            </svg>
-          </button>
-
-          <button 
-            className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 ${repeatMode > 0 ? 'text-[#00ff88] opacity-100 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]' : 'text-white opacity-80 hover:opacity-100'}`}
-            title={repeatMode === 2 ? "Repeat One" : repeatMode === 1 ? "Repeat All" : "Repeat Off"} 
-            onClick={() => setRepeatMode((prev) => ((prev + 1) % 3) as 0 | 1 | 2)} 
-            disabled={playlist.length === 0}
-          >
-            {repeatMode === 2 ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z"/>
+            <button 
+              className="bg-transparent border-none text-white cursor-pointer flex items-center justify-center p-0 opacity-80 transition-all hover:opacity-100 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100" 
+              title="Next" onClick={() => handleNext()} disabled={playlist.length === 0}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
               </svg>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
-              </svg>
-            )}
-          </button>
+            </button>
+          </div>
 
-          <button 
-            className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 ${showLyrics ? 'text-[#00ff88] opacity-100 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]' : 'text-white opacity-80 hover:opacity-100'}`}
-            title="Lyrics" 
-            onClick={() => setShowLyrics(!showLyrics)} 
-            disabled={playlist.length === 0}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M21 11.01L3 11v2h18zM3 16h12v2H3zM21 6H3v2.01L21 8z"/>
-            </svg>
-          </button>
+          <div className="flex items-center gap-6">
+            <button 
+              className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 ${isShuffle ? 'text-[#00ff88] opacity-100 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]' : 'text-white opacity-80 hover:opacity-100'}`}
+              title="Shuffle" onClick={() => setIsShuffle(!isShuffle)} disabled={playlist.length === 0}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
+              </svg>
+            </button>
+
+            <button 
+              className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 ${repeatMode > 0 ? 'text-[#00ff88] opacity-100 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]' : 'text-white opacity-80 hover:opacity-100'}`}
+              title={repeatMode === 2 ? "Repeat One" : repeatMode === 1 ? "Repeat All" : "Repeat Off"} 
+              onClick={() => setRepeatMode((prev) => ((prev + 1) % 3) as 0 | 1 | 2)} 
+              disabled={playlist.length === 0}
+            >
+              {repeatMode === 2 ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z"/>
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+                </svg>
+              )}
+            </button>
+
+            <button 
+              className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 ${showLyrics ? 'text-[#00ff88] opacity-100 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]' : 'text-white opacity-80 hover:opacity-100'}`}
+              title="Lyrics" 
+              onClick={() => {
+                setShowLyrics(!showLyrics);
+                if (!showLyrics) setShowSearch(false);
+              }} 
+              disabled={playlist.length === 0}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21 11.01L3 11v2h18zM3 16h12v2H3zM21 6H3v2.01L21 8z"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </main>
