@@ -1,5 +1,5 @@
 {
-  "name": "train-playlist",
+  "name": "local-train-playlist",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,14 +11,21 @@
   "dependencies": {
     "next": "16.3.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "react-youtube": "^10.1.0",
+    "yt-search": "^2.13.1"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/yt-search": "^2.10.3",
+    "autoprefixer": "^10.5.4",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
+    "postcss": "^8.5.26",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5"
   }
 }
