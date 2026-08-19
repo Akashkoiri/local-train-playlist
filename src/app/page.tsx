@@ -166,7 +166,11 @@ export default function Home() {
         
         if (data.error) throw new Error(data.error);
         if (data.tracks && data.tracks.length > 0) {
-          setPlaylist(data.tracks);
+          const cleanedTracks = data.tracks.map((track: Track) => ({
+            ...track,
+            artist: track.artist.replace(/ - Topic/i, '').replace(/VEVO/i, '').trim()
+          }));
+          setPlaylist(cleanedTracks);
         } else {
           setError('Playlist is empty or invalid.');
         }
