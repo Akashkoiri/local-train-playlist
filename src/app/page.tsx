@@ -602,7 +602,7 @@ export default function Home() {
       {showSettings && (
         <div className="absolute top-5 bottom-[150px] left-1/2 -translate-x-1/2 w-[90%] max-w-[500px] h-fit z-20 flex flex-col items-center justify-start overflow-hidden bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
            <h3 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-md">
-             Settings
+             Change Playlist
            </h3>
            <div className="w-full flex flex-col gap-4">
              <div>
@@ -725,7 +725,10 @@ export default function Home() {
       <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 w-[95%] sm:w-[90%] max-w-[700px] bg-gradient-to-br from-[#8c322840] to-[#50141440] backdrop-blur-xl border border-white/10 rounded-[32px] md:rounded-[40px] px-4 md:px-6 py-3 md:py-4 flex flex-col shadow-[0_16px_40px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] z-30">
         
         <div className="flex items-center gap-3 md:gap-6 w-full">
-          <div className={`relative w-[50px] h-[50px] md:w-[70px] md:h-[70px] rounded-full overflow-hidden shadow-[0_4px_15px_rgba(0,0,0,0.4)] shrink-0 ${(isPlaying && !isLoading) ? 'animate-spin-slow' : ''}`}>
+          <div 
+            className="relative w-[50px] h-[50px] md:w-[70px] md:h-[70px] rounded-full overflow-hidden shadow-[0_4px_15px_rgba(0,0,0,0.4)] shrink-0 animate-spin-slow"
+            style={{ animationPlayState: (isPlaying && !isLoading) ? 'running' : 'paused' }}
+          >
             <img src={currentTrack ? currentTrack.albumArt : "/album.jpg"} alt="Album Art" className="w-full h-full object-cover" />
           </div>
 
