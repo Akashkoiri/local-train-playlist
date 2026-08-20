@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import YouTube, { YouTubeEvent, YouTubePlayer } from 'react-youtube';
 import { Sekuya } from 'next/font/google';
+import PusherClient, { PresenceChannel } from 'pusher-js';
 
 const sekuya = Sekuya({ weight: '400', subsets: ['latin'] });
 
@@ -32,6 +33,7 @@ const extractPlaylistId = (input: string) => {
 
 export default function Home() {
   const [time, setTime] = useState('');
+  const [onlineCount, setOnlineCount] = useState(1);
   
   // Data state
   const [playlist, setPlaylist] = useState<Track[]>([]);
@@ -110,6 +112,39 @@ export default function Home() {
     updateTime();
     const timer = setInterval(updateTime, 60000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Online count (Real-time presence via Pusher)
+  useEffect(() => {
+    // Only initialize Pusher if the keys are present in the environment
+    if (!process.env.NEXT_PUBLIC_PUSHER_KEY || !process.env.NEXT_PUBLIC_PUSHER_CLUSTER) {
+      console.warn('Pusher keys are missing from .env. Online count will not work.');
+      return;
+    }
+
+    const pusher = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+      authEndpoint: '/api/pusher/auth',
+    });
+
+    const channel = pusher.subscribe('presence-train') as PresenceChannel;
+
+    channel.bind('pusher:subscription_succeeded', (members: any) => {
+      setOnlineCount(members.count);
+    });
+
+    channel.bind('pusher:member_added', (member: any) => {
+      setOnlineCount(channel.members.count);
+    });
+
+    channel.bind('pusher:member_removed', (member: any) => {
+      setOnlineCount(channel.members.count);
+    });
+
+    return () => {
+      pusher.unsubscribe('presence-train');
+      pusher.disconnect();
+    };
   }, []);
 
   // Fetch lyrics when needed
@@ -407,7 +442,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-1.5 md:gap-2 bg-black/30 px-3 py-1.5 md:px-4 rounded-full text-xs md:text-sm font-medium text-white backdrop-blur-md border border-white/5 whitespace-nowrap">
               <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-[#00ff88] rounded-full shadow-[0_0_8px_#00ff88]"></div>
-              <span className="whitespace-nowrap">38 online</span>
+              <span className="whitespace-nowrap">{onlineCount} online</span>
             </div>
           </div>
           
