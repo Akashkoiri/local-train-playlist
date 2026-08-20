@@ -694,116 +694,120 @@ export default function Home() {
             <img src={currentTrack ? currentTrack.albumArt : "/album.jpg"} alt="Album Art" className="w-full h-full object-cover" />
           </div>
 
-          <div className="grow flex flex-col gap-1 md:gap-2 w-full min-w-0">
-            <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-xs text-white/80 w-full">
-              <span>{formatTime(progress)}</span>
-              <div className="grow h-1 bg-white/20 rounded-full cursor-pointer relative" onClick={handleSeek}>
-                <div className="h-full bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${progressPercent}%` }}></div>
-              </div>
-              <span>{formatTime(duration)}</span>
-            </div>
-
-            {error ? (
-               <div className="flex flex-col">
-                 <h2 className="text-base md:text-lg font-bold m-0 drop-shadow-sm text-[#ff6b6b]">Setup Required</h2>
-                 <p className="text-xs md:text-sm text-white/80 m-0">{error}</p>
-               </div>
-            ) : (
-              <div className="flex flex-col overflow-hidden w-full">
-                <div className={`relative w-full overflow-hidden whitespace-nowrap ${isLongTitle ? '[mask-image:linear-gradient(to_right,transparent,black_10px,black_calc(100%_-_10px),transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_10px,black_calc(100%_-_10px),transparent)]' : ''}`}>
-                  {isLongTitle ? (
-                    <div className="animate-marquee hover:[animation-play-state:paused]">
-                      <h2 className="text-base md:text-lg font-bold m-0 drop-shadow-sm inline-block mr-8">{titleText}</h2>
-                      <h2 className="text-base md:text-lg font-bold m-0 drop-shadow-sm inline-block mr-8">{titleText}</h2>
-                    </div>
-                  ) : (
-                    <h2 className="text-base md:text-lg font-bold m-0 drop-shadow-sm truncate">{titleText}</h2>
-                  )}
+          <div className="grow flex flex-col gap-0 md:gap-1 w-full min-w-0 justify-center">
+            {/* Row 1: Progress + Playback Controls */}
+            <div className="flex items-center justify-between gap-4 w-full">
+              <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-xs text-white/80 w-full grow">
+                <span>{formatTime(progress)}</span>
+                <div className="grow h-1 bg-white/20 rounded-full cursor-pointer relative" onClick={handleSeek}>
+                  <div className="h-full bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${progressPercent}%` }}></div>
                 </div>
-                <p className="text-xs md:text-sm text-white/80 m-0 truncate">{artistText}</p>
+                <span>{formatTime(duration)}</span>
               </div>
-            )}
-          </div>
 
-          <div className="flex flex-col items-center gap-2 md:gap-3 shrink-0">
-            <div className="flex items-center gap-2 md:gap-4">
-              <button 
-                className="bg-transparent border-none text-white cursor-pointer flex items-center justify-center p-0 opacity-80 transition-all hover:opacity-100 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100" 
-                title="Previous" onClick={handlePrev} disabled={playlist.length === 0}
-              >
-                <svg width="20" height="20" className="md:w-6 md:h-6" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
-                </svg>
-              </button>
-              
-              <button 
-                className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white text-black shadow-[0_4px_10px_rgba(0,0,0,0.3)] flex items-center justify-center p-0 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100" 
-                onClick={togglePlay} title={isPlaying ? "Pause" : "Play"} disabled={playlist.length === 0 || isLoading}
-              >
-                {isPlaying ? (
+              <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                <button 
+                  className="bg-transparent border-none text-white cursor-pointer flex items-center justify-center p-0 opacity-80 transition-all hover:opacity-100 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100" 
+                  title="Previous" onClick={handlePrev} disabled={playlist.length === 0}
+                >
                   <svg width="20" height="20" className="md:w-6 md:h-6" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
                   </svg>
-                ) : (
-                  <svg width="20" height="20" className="md:w-6 md:h-6" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: '2px' }}>
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                )}
-              </button>
+                </button>
+                
+                <button 
+                  className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white text-black shadow-[0_4px_10px_rgba(0,0,0,0.3)] flex items-center justify-center p-0 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100" 
+                  onClick={togglePlay} title={isPlaying ? "Pause" : "Play"} disabled={playlist.length === 0 || isLoading}
+                >
+                  {isPlaying ? (
+                    <svg width="20" height="20" className="md:w-6 md:h-6" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" className="md:w-6 md:h-6" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: '2px' }}>
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  )}
+                </button>
 
-              <button 
-                className="bg-transparent border-none text-white cursor-pointer flex items-center justify-center p-0 opacity-80 transition-all hover:opacity-100 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100" 
-                title="Next" onClick={() => handleNext()} disabled={playlist.length === 0}
-              >
-                <svg width="20" height="20" className="md:w-6 md:h-6" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
-                </svg>
-              </button>
+                <button 
+                  className="bg-transparent border-none text-white cursor-pointer flex items-center justify-center p-0 opacity-80 transition-all hover:opacity-100 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100" 
+                  title="Next" onClick={() => handleNext()} disabled={playlist.length === 0}
+                >
+                  <svg width="20" height="20" className="md:w-6 md:h-6" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-4 md:gap-6">
-              <button 
-                className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 ${isShuffle ? 'text-[#00ff88] opacity-100 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]' : 'text-white opacity-80 hover:opacity-100'}`}
-                title="Shuffle" onClick={() => setIsShuffle(!isShuffle)} disabled={playlist.length === 0}
-              >
-                <svg width="16" height="16" className="md:w-[18px] md:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
-                </svg>
-              </button>
+            {/* Row 2: Title/Artist + Extra Controls */}
+            <div className="flex items-center justify-between gap-4 w-full">
+              {error ? (
+                 <div className="flex flex-col min-w-0">
+                   <h2 className="text-base md:text-lg font-bold m-0 drop-shadow-sm text-[#ff6b6b]">Setup Required</h2>
+                   <p className="text-xs md:text-sm text-white/80 m-0">{error}</p>
+                 </div>
+              ) : (
+                <div className="flex flex-col overflow-hidden w-full min-w-0">
+                  <div className={`relative w-full overflow-hidden whitespace-nowrap ${isLongTitle ? '[mask-image:linear-gradient(to_right,transparent,black_10px,black_calc(100%_-_10px),transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_10px,black_calc(100%_-_10px),transparent)]' : ''}`}>
+                    {isLongTitle ? (
+                      <div className="animate-marquee hover:[animation-play-state:paused]">
+                        <h2 className="text-base md:text-lg font-bold m-0 drop-shadow-sm inline-block mr-8">{titleText}</h2>
+                        <h2 className="text-base md:text-lg font-bold m-0 drop-shadow-sm inline-block mr-8">{titleText}</h2>
+                      </div>
+                    ) : (
+                      <h2 className="text-base md:text-lg font-bold m-0 drop-shadow-sm truncate">{titleText}</h2>
+                    )}
+                  </div>
+                  <p className="text-xs md:text-sm text-white/80 m-0 truncate">{artistText}</p>
+                </div>
+              )}
 
-              <button 
-                className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 ${repeatMode > 0 ? 'text-[#00ff88] opacity-100 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]' : 'text-white opacity-80 hover:opacity-100'}`}
-                title={repeatMode === 2 ? "Repeat One" : repeatMode === 1 ? "Repeat All" : "Repeat Off"} 
-                onClick={() => setRepeatMode((prev) => ((prev + 1) % 3) as 0 | 1 | 2)} 
-                disabled={playlist.length === 0}
-              >
-                {repeatMode === 2 ? (
+              <div className="flex items-center gap-4 md:gap-6 shrink-0">
+                <button 
+                  className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 ${isShuffle ? 'text-[#00ff88] opacity-100 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]' : 'text-white opacity-80 hover:opacity-100'}`}
+                  title="Shuffle" onClick={() => setIsShuffle(!isShuffle)} disabled={playlist.length === 0}
+                >
                   <svg width="16" height="16" className="md:w-[18px] md:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z"/>
+                    <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
                   </svg>
-                ) : (
-                  <svg width="16" height="16" className="md:w-[18px] md:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
-                  </svg>
-                )}
-              </button>
+                </button>
 
-              <button 
-                className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 ${showLyrics ? 'text-[#00ff88] opacity-100 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]' : 'text-white opacity-80 hover:opacity-100'}`}
-                title="Lyrics" 
-                onClick={() => {
-                  setShowLyrics(!showLyrics);
-                  if (!showLyrics) {
-                    setShowSearch(false);
-                    setShowSettings(false);
-                  }
-                }} 
-                disabled={playlist.length === 0}
-              >
-                <svg width="16" height="16" className="md:w-[18px] md:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M21 11.01L3 11v2h18zM3 16h12v2H3zM21 6H3v2.01L21 8z"/>
-                </svg>
-              </button>
+                <button 
+                  className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 ${repeatMode > 0 ? 'text-[#00ff88] opacity-100 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]' : 'text-white opacity-80 hover:opacity-100'}`}
+                  title={repeatMode === 2 ? "Repeat One" : repeatMode === 1 ? "Repeat All" : "Repeat Off"} 
+                  onClick={() => setRepeatMode((prev) => ((prev + 1) % 3) as 0 | 1 | 2)} 
+                  disabled={playlist.length === 0}
+                >
+                  {repeatMode === 2 ? (
+                    <svg width="16" height="16" className="md:w-[18px] md:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z"/>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" className="md:w-[18px] md:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+                    </svg>
+                  )}
+                </button>
+
+                <button 
+                  className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-0 transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 ${showLyrics ? 'text-[#00ff88] opacity-100 drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]' : 'text-white opacity-80 hover:opacity-100'}`}
+                  title="Lyrics" 
+                  onClick={() => {
+                    setShowLyrics(!showLyrics);
+                    if (!showLyrics) {
+                      setShowSearch(false);
+                      setShowSettings(false);
+                    }
+                  }} 
+                  disabled={playlist.length === 0}
+                >
+                  <svg width="16" height="16" className="md:w-[18px] md:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M21 11.01L3 11v2h18zM3 16h12v2H3zM21 6H3v2.01L21 8z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
