@@ -695,6 +695,14 @@ export default function Home() {
           </div>
 
           <div className="grow flex flex-col gap-1 md:gap-2 w-full min-w-0">
+            <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-xs text-white/80 w-full">
+              <span>{formatTime(progress)}</span>
+              <div className="grow h-1 bg-white/20 rounded-full cursor-pointer relative" onClick={handleSeek}>
+                <div className="h-full bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${progressPercent}%` }}></div>
+              </div>
+              <span>{formatTime(duration)}</span>
+            </div>
+
             {error ? (
                <div className="flex flex-col">
                  <h2 className="text-base md:text-lg font-bold m-0 drop-shadow-sm text-[#ff6b6b]">Setup Required</h2>
@@ -715,14 +723,6 @@ export default function Home() {
                 <p className="text-xs md:text-sm text-white/80 m-0 truncate">{artistText}</p>
               </div>
             )}
-
-            <div className="hidden md:flex items-center gap-4 text-xs text-white/80 w-full">
-              <span>{formatTime(progress)}</span>
-              <div className="grow h-1 bg-white/20 rounded-full cursor-pointer relative" onClick={handleSeek}>
-                <div className="h-full bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${progressPercent}%` }}></div>
-              </div>
-              <span>{formatTime(duration)}</span>
-            </div>
           </div>
 
           <div className="flex flex-col items-center gap-2 md:gap-3 shrink-0">
@@ -806,14 +806,6 @@ export default function Home() {
               </button>
             </div>
           </div>
-        </div>
-
-        <div className="flex md:hidden items-center gap-3 text-[10px] text-white/80 w-full px-2 mt-1">
-          <span>{formatTime(progress)}</span>
-          <div className="grow h-1.5 bg-white/20 rounded-full cursor-pointer relative" onClick={handleSeek}>
-            <div className="h-full bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.5)]" style={{ width: `${progressPercent}%` }}></div>
-          </div>
-          <span>{formatTime(duration)}</span>
         </div>
 
       </div>
