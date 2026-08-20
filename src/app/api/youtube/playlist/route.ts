@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         artist: item.snippet.videoOwnerChannelTitle || 'YouTube',
         albumArt: item.snippet.thumbnails?.maxres?.url || item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url,
         durationMs: 0 // Duration will be determined by the YouTube player on the client side
-      })).filter((t: any) => t.title && t.title !== 'Private video');
+      })).filter((t: any) => t.title && t.title !== 'Private video' && t.title !== 'Deleted video');
 
       allTracks = [...allTracks, ...tracks];
       nextPageToken = data.nextPageToken;
